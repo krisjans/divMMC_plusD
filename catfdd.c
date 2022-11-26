@@ -1,12 +1,23 @@
+#ifdef __Z80
+    #define IO_PORT(name, addr) __sfr __at addr name
+#else
+    #define IO_PORT(name, addr) volatile unsigned char name
+#endif
+#ifndef __Z80
+#define __SPECTRUM
+#define __Z80
+#endif
+
+
 #include <arch/zx.h>
 #include <stdio.h>
 #include <z80.h>
 
-__sfr __at 0xA7 IO_FDC_CMD_STS; // originally at 0xE3 227
-__sfr __at 0xAF IO_FDC_TRACK;   // originally at 0xEB 235
-__sfr __at 0xEF IO_PLUSD_CTRL;  // originally at 0xEF 239
-__sfr __at 0xB7 IO_FDC_SECT;    // originally at 0xF3 243
-__sfr __at 0xBF IO_FDC_DATA;    // originally at 0xFB 251
+IO_PORT(IO_FDC_CMD_STS, 0xA7); // originally at 0xE3 227
+IO_PORT(IO_FDC_TRACK,   0xAF);  // originally at 0xEB 235
+IO_PORT(IO_PLUSD_CTRL,  0xEF);  // originally at 0xEF 239
+IO_PORT(IO_FDC_SECT,    0xB7);    // originally at 0xF3 243
+IO_PORT(IO_FDC_DATA,    0xBF);    // originally at 0xFB 251
 
 #define PLUSD_DRIVE_A   (1 << 0)
 #define PLUSD_DRIVE_B   (1 << 1)
