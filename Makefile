@@ -16,7 +16,7 @@ catfdd_tap: build
 catfdd_wav: catfdd_tap
 	tape2wav build/catfdd.tap build/catfdd.wav
 
-catfdd_pay: catfdd_wav
+catfdd_play: catfdd_wav
 	play build/catfdd.wav
 
 catfdd_dot: build
