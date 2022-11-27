@@ -54,21 +54,22 @@ typedef union _FileDescriptor {
 
 } FileDescriptorPlusD;
 
-static void dumpFileName(FileDescriptorPlusD *fd) {
+static void dumpFileName(uint8_t fileNum, FileDescriptorPlusD *fd) {
     if (fd->typePlusD != FT_ERASED) {
         uint16_t len = fd->header.len;
-        printf("%10s %6d B / %3d KB\n", fd->name, len, len / 1024);
+        printf("p%u %10s %5u B /%3u KB\n", fileNum, fd->name, len, len / 1024);
     }
 }
 
 void dumpFileList(void) {
     for (int track = 0; track < FDD_FAT_TRACKS; ++track){
         for (int sector = 1; sector <= FDD_MAX_SECTOR; ++sector) {
+            uint8_t fileNum = (track * FDD_MAX_SECTOR + sector) * 2 - 1;
             int len = readSector(0, track, sector);
             if (len == FILE_DESCR_PLUSD_LEN || len == FDD_MAX_SECT_LEN) {
-                dumpFileName((FileDescriptorPlusD *)gFdcData);
+                dumpFileName(fileNum, (FileDescriptorPlusD *)gFdcData);
                 if (len == FDD_MAX_SECT_LEN) {
-                    dumpFileName((FileDescriptorPlusD *)&gFdcData[FILE_DESCR_PLUSD_LEN]);
+                    dumpFileName(fileNum + 1, (FileDescriptorPlusD *)&gFdcData[FILE_DESCR_PLUSD_LEN]);
                 }
             }
             else {
