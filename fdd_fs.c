@@ -25,6 +25,18 @@ enum FileTypesPlusD {
 };
 
 #define FILE_DESCR_PLUSD_LEN 256
+#define FILE_HEADER_PLUSD_LEN 9
+
+typedef union _FileDataHeader {
+    struct {
+        uint8_t typeTape;
+        uint16_t len;
+        uint16_t start;
+        uint16_t type_spec1;
+        uint16_t type_spec2;
+    };
+    uint8_t u8[FILE_HEADER_PLUSD_LEN];
+} FileDataHeader;
 
 typedef union _FileDescriptor {
     struct {
@@ -36,9 +48,7 @@ typedef union _FileDescriptor {
         unsigned char sector;
         unsigned char bitmap[195];
         unsigned char reserved;
-        unsigned char typeTape;
-        unsigned char lenLo;
-        unsigned char lenHi;
+        FileDataHeader header;
     };
     unsigned char u8[FILE_DESCR_PLUSD_LEN];
 
@@ -46,7 +56,7 @@ typedef union _FileDescriptor {
 
 static void dumpFileName(FileDescriptorPlusD *fd) {
     if (fd->typePlusD != FT_ERASED) {
-        unsigned short len = ((unsigned short)fd->lenHi << 8) | fd->lenLo;
+        uint16_t len = fd->header.len;
         printf("%10s %6d B / %3d KB\n", fd->name, len, len / 1024);
     }
 }
