@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    printf("CATFDD v0.0.1:\nLIST files from PlusD FDD\n");
+    printf("CATFDD v0.0.2:\nLIST files from PlusD FDD\n");
     
     selectDriveA(0);
     z80_delay_ms(500);

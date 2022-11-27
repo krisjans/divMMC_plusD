@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    printf("LOADFDD v0.0.1:\nLIST files from PlusD FDD\n");
+    printf("LOADFDD v0.0.2:\nLIST files from PlusD FDD\n");
     
     if(fileNumber < 1 || fileNumber > 80) {
         printf("Error: invalid file number:%u\n", fileNumber);
