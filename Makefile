@@ -1,7 +1,7 @@
 export PATH := $(PATH):$(HOME)/retroPc/src/z80/z88dk/bin
 export ZCCCFG ?= $(HOME)/retroPc/src/z80/z88dk/lib/config
 
-C_FILES=catfdd.c plusd.c
+C_FILES=catfdd.c plusd.c fdd_fs.c
 
 all: clean catfdd_dot catfdd_tap
 
