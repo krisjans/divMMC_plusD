@@ -11,6 +11,7 @@ clean:
 catfdd_tap: build
 	zcc +zx -vn --list -clib=sdcc_iy -startup=30\
 		-SO3 --max-allocs-per-node200000 --opt-code-size\
+		-DNO_ARGC_ARGV\
 		$(C_FILES) -o build/catfdd -create-app
 	mv *.lis build/
 	ls -lah build/catfdd_CODE.bin

@@ -6,13 +6,27 @@
 
 #include <arch/zx.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <z80.h>
 #include "plusd.h"
 #include "fdd_fs.h"
 
+#ifdef NO_ARGC_ARGV
+int main(void) {
+    int argc = 1;
+    const char *argv[1] = {
+        "CATFDD",
+    };
+#else
 int main(int argc, char **argv) {
-    (void)argc;
-    (void)argv;
+#endif
+    int8_t fileFilter = -1;
+    for (int i = 1; i < argc; ++i) {
+        char cmd = argv[i][0];
+        if (cmd == 'f' || cmd == 'F') {
+            fileFilter = atoi((char *)&argv[i][1]);
+        }
+    }
 
     printf("CATFDD v0.0.1:\nLIST files from PlusD FDD\n");
     
@@ -20,7 +34,7 @@ int main(int argc, char **argv) {
     z80_delay_ms(500);
 
     if (fdcForceInterrupt() == 0) {
-        dumpFileList();
+        dumpFileList(fileFilter);
     }
     else {
         printf("Drive not ready!\n");
