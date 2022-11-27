@@ -13,28 +13,33 @@
 
 #ifdef NO_ARGC_ARGV
 int main(void) {
-    int argc = 1;
-    const char *argv[1] = {
-        "CATFDD",
+    int argc = 2;
+    const char *argv[2] = {
+        "LOADFDD", "p41"
     };
 #else
 int main(int argc, char **argv) {
 #endif
-    int8_t fileFilter = -1;
+    int8_t fileNumber = -1;
     for (int i = 1; i < argc; ++i) {
         char cmd = argv[i][0];
-        if (cmd == 'f' || cmd == 'F') {
-            fileFilter = atoi((char *)&argv[i][1]);
+        if (cmd == 'p' || cmd == 'P') {
+            fileNumber = atoi((char *)&argv[i][1]);
         }
     }
 
-    printf("CATFDD v0.0.1:\nLIST files from PlusD FDD\n");
+    printf("LOADFDD v0.0.1:\nLIST files from PlusD FDD\n");
     
+    if(fileNumber < 1 || fileNumber > 80) {
+        printf("Error: invalid file number:%u\n", fileNumber);
+        return 0;
+    }
+
     selectDriveA(0);
     z80_delay_ms(500);
 
     if (fdcForceInterrupt() == 0) {
-        dumpFileList(fileFilter);
+        loadFile(fileNumber);
     }
     else {
         printf("Drive not ready!\n");

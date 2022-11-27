@@ -7,6 +7,8 @@
 #include <arch/zx.h>
 #include <stdio.h>
 #include <z80.h>
+#include <string.h>
+#include "debug.h"
 #include "plusd.h"
 #include "fdd_fs.h"
 
@@ -54,6 +56,50 @@ typedef union _FileDescriptor {
 
 } FileDescriptorPlusD;
 
+static void loadFileData(uint8_t *dst, uint16_t len, uint8_t track, uint8_t sector) {
+    uint8_t first = 1;
+    while (len) {
+        DBG("T=%2d S=%2d\n", track, sector);
+        if (readSector(0, track, sector) != FDD_MAX_SECT_LEN) {
+            printf("\n\nRead error track==%d sector %d\n\n", track, sector);
+            break;
+        }
+        uint16_t chunk = FDD_MAX_SECT_LEN > len ? len : FDD_MAX_SECT_LEN - 2;
+        uint8_t *src = gFdcData;
+        if (first) {
+            first = 0;
+            src = gFdcData + sizeof(FileDataHeader);
+            chunk -= sizeof(FileDataHeader);
+            FileDataHeader *h = (FileDataHeader *)gFdcData;
+            DBG("T==%2u len==%5u adr==%5u\n", h->typeTape, h->len, h->start);
+        }
+        memcpy(dst, src, chunk);
+        dst += chunk;
+        len -= chunk;
+        track = gFdcData[FDD_MAX_SECT_LEN - 2];
+        sector = gFdcData[FDD_MAX_SECT_LEN - 1];
+        if (track + sector == 0) {
+            break;
+        }
+    }
+    zx_border(INK_YELLOW);
+    z80_delay_ms(5000);
+}
+
+static void dumpFileInfo(FileDescriptorPlusD *fd) {
+    if (fd->typePlusD == FT_ERASED) {
+        printf("No file, Erased sector\n");
+        return;
+    }
+    printf("sectors: %u\n", fd->sectCntHi << 8 | fd->sectCntLo);
+    printf("track  : %u\n", fd->track);
+    printf("sector : %u\n", fd->sector);
+    printf("start  : %u\n*\n", fd->header.start);
+    printf("ts1    : %u\n*\n", fd->header.type_spec1);
+    printf("ts2    : %u\n*\n", fd->header.type_spec2);
+}
+
+
 static void dumpFileName(uint8_t fileNum, FileDescriptorPlusD *fd, int fileFilter) {
     if (fileFilter >=0 ) {
         if (fileFilter != fd->typePlusD) {
@@ -81,5 +127,30 @@ void dumpFileList(int fileFilter) {
                 printf("Error reading track %d sector %d!\n", track, sector);
             }
         }
+    }
+}
+
+void loadFile(int fileNumber) {
+    uint8_t track, sector, offset;
+    if (fileNumber > 0 && fileNumber <= 80) {
+        printf("fn=%u ", fileNumber);
+        ++fileNumber;
+        offset = fileNumber % 2;
+        fileNumber /= 2;
+        track  = fileNumber / FDD_MAX_SECTOR;
+        sector  = fileNumber % FDD_MAX_SECTOR;
+        printf("T=%d S=%d offset=%d\n", track, sector, offset);
+        int len = readSector(0, track, sector);
+        FileDescriptorPlusD *fd = (FileDescriptorPlusD *)gFdcData;
+        if (len == FDD_MAX_SECT_LEN) {
+            dumpFileInfo(&fd[offset]);
+            loadFileData((uint8_t *)fd[offset].header.start, fd[offset].header.len, fd[offset].track, fd[offset].sector);
+        }
+        else {
+            printf("Error reading track %d sector %d!\n", track, sector);
+        }
+    }
+    else {
+        printf("Error: invalid file number: %u\n", fileNumber);
     }
 }
