@@ -4,8 +4,9 @@ export ZCCCFG ?= $(HOME)/retroPc/src/z80/z88dk/lib/config
 SHARED_C_FILES=plusd.c fdd_fs.c
 CAT_C_FILES=catfdd.c $(SHARED_C_FILES)
 LOAD_C_FILES=loadfdd.c $(SHARED_C_FILES)
+CP_C_FILES=cpfdd.c $(SHARED_C_FILES)
 
-all: clean catfdd_dot catfdd_tap loadfdd_dot loadfdd_tap
+all: clean catfdd_dot catfdd_tap loadfdd_dot loadfdd_tap cpfdd_dot cpfdd_tap
 
 clean:
 	rm -rf build
@@ -53,6 +54,28 @@ loadfdd_dot: build
 	mv *.lis build/
 	ls -lah build/loadfdd_CODE.bin
 	ls -lah build/LOADFDD
+
+cpfdd_tap: build
+	zcc +zx -vn --list -clib=sdcc_iy -startup=30\
+		-SO3 --max-allocs-per-node200000 --opt-code-size\
+		-DNO_ARGC_ARGV\
+		$(CP_C_FILES) -o build/cpfdd -create-app
+	mv *.lis build/
+	ls -lah build/cpfdd_CODE.bin
+
+cpfdd_wav: cpfdd_tap
+	tape2wav build/cpfdd.tap build/cpfdd.wav
+
+cpfdd_play: cpfdd_wav
+	play build/cpfdd.wav
+
+cpfdd_dot: build
+	zcc +zx -vn --list -clib=sdcc_iy -startup=30\
+		-SO3 --max-allocs-per-node200000 --opt-code-size\
+		$(CP_C_FILES) -o build/cpfdd -subtype=dot -create-app
+	mv *.lis build/
+	ls -lah build/cpfdd_CODE.bin
+	ls -lah build/CPFDD
 
 build:
 	mkdir -p build
