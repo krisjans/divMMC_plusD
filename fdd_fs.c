@@ -13,7 +13,6 @@
 #include "plusd.h"
 #include "fdd_fs.h"
 
-#define FDD_MAX_SECTOR  10
 #define FDD_FAT_TRACKS  3
 
 enum FileTypesPlusD {
