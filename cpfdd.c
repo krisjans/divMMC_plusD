@@ -13,6 +13,9 @@
 #include "plusd.h"
 #include "fdd_fs.h"
 
+#define STRINGIZE(x) #x
+#define STRINGIZE_VALUE_OF(x) STRINGIZE(x)
+
 #ifdef NO_ARGC_ARGV
 int main(void) {
     int argc = 3;
@@ -22,7 +25,7 @@ int main(void) {
 #else
 int main(int argc, char **argv) {
 #endif
-    printf("CPFDD v0.0.2:\nCopy files from PlusD FDD\n");
+    printf("CPFDD " STRINGIZE_VALUE_OF(VERSION) ":\nCopy files from PlusD FDD\n");
 
     if (argc < 3) {
         printf("Usage: cpfdd p_file_number_on_fdd file_name_on_sd\n");

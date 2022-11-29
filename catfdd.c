@@ -11,6 +11,9 @@
 #include "plusd.h"
 #include "fdd_fs.h"
 
+#define STRINGIZE(x) #x
+#define STRINGIZE_VALUE_OF(x) STRINGIZE(x)
+
 #ifdef NO_ARGC_ARGV
 int main(void) {
     int argc = 1;
@@ -28,7 +31,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    printf("CATFDD v0.0.2:\nLIST files from PlusD FDD\n");
+    printf("CATFDD " STRINGIZE_VALUE_OF(VERSION) ":\nLIST files from PlusD FDD\n");
     
     selectDriveA(0);
     z80_delay_ms(500);

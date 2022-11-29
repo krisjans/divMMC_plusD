@@ -1,6 +1,8 @@
 export PATH := $(PATH):$(HOME)/retroPc/src/z80/z88dk/bin
 export ZCCCFG ?= $(HOME)/retroPc/src/z80/z88dk/lib/config
 
+VERSION="v0.0.3"
+
 SHARED_C_FILES=plusd.c fdd_fs.c
 CAT_C_FILES=catfdd.c $(SHARED_C_FILES)
 LOAD_C_FILES=loadfdd.c $(SHARED_C_FILES)
@@ -14,7 +16,7 @@ clean:
 catfdd_tap: build
 	zcc +zx -vn --list -clib=sdcc_iy -startup=30\
 		-SO3 --max-allocs-per-node200000 --opt-code-size\
-		-DNO_ARGC_ARGV\
+		-DVERSION=$(VERSION) -DNO_ARGC_ARGV\
 		$(CAT_C_FILES) -o build/catfdd -create-app
 	mv *.lis build/
 	ls -lah build/catfdd_CODE.bin
@@ -28,6 +30,7 @@ catfdd_play: catfdd_wav
 catfdd_dot: build
 	zcc +zx -vn --list -clib=sdcc_iy -startup=30\
 		-SO3 --max-allocs-per-node200000 --opt-code-size\
+		-DVERSION=$(VERSION)\
 		$(CAT_C_FILES) -o build/catfdd -subtype=dot -create-app
 	mv *.lis build/
 	ls -lah build/catfdd_CODE.bin
@@ -36,7 +39,7 @@ catfdd_dot: build
 loadfdd_tap: build
 	zcc +zx -vn --list -clib=sdcc_iy -startup=30\
 		-SO3 --max-allocs-per-node200000 --opt-code-size\
-		-DNO_ARGC_ARGV\
+		-DVERSION=$(VERSION) -DNO_ARGC_ARGV\
 		$(LOAD_C_FILES) -o build/loadfdd -create-app
 	mv *.lis build/
 	ls -lah build/loadfdd_CODE.bin
@@ -50,6 +53,7 @@ loadfdd_play: loadfdd_wav
 loadfdd_dot: build
 	zcc +zx -vn --list -clib=sdcc_iy -startup=30\
 		-SO3 --max-allocs-per-node200000 --opt-code-size\
+		-DVERSION=$(VERSION)\
 		$(LOAD_C_FILES) -o build/loadfdd -subtype=dot -create-app
 	mv *.lis build/
 	ls -lah build/loadfdd_CODE.bin
@@ -58,7 +62,7 @@ loadfdd_dot: build
 cpfdd_tap: build
 	zcc +zx -vn --list -clib=sdcc_iy -startup=30\
 		-SO3 --max-allocs-per-node200000 --opt-code-size\
-		-DNO_ARGC_ARGV\
+		-DVERSION=$(VERSION) -DNO_ARGC_ARGV\
 		$(CP_C_FILES) -o build/cpfdd -create-app
 	mv *.lis build/
 	ls -lah build/cpfdd_CODE.bin
@@ -72,6 +76,7 @@ cpfdd_play: cpfdd_wav
 cpfdd_dot: build
 	zcc +zx -vn --list -clib=sdcc_iy -startup=30\
 		-SO3 --max-allocs-per-node200000 --opt-code-size\
+		-DVERSION=$(VERSION)\
 		$(CP_C_FILES) -o build/cpfdd -subtype=dot -create-app
 	mv *.lis build/
 	ls -lah build/cpfdd_CODE.bin
