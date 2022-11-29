@@ -3,5 +3,6 @@
 
 void dumpFileList(int fileFilter);
 void loadFile(int fileNumber);
+void copyFile(int fileNumber, int fp);
 
 #endif

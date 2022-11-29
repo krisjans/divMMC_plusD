@@ -6,6 +6,7 @@
 
 #include <arch/zx.h>
 #include <arch/zx/esxdos.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <z80.h>
@@ -14,25 +15,33 @@
 
 #ifdef NO_ARGC_ARGV
 int main(void) {
-    int argc = 2;
-    const char *argv[2] = {
-        "CPFDD", "p1", "testfile.bin"
+    int argc = 3;
+    const char *argv[3] = {
+        "CPFDD", "p41", "testfile.bin"
     };
 #else
 int main(int argc, char **argv) {
 #endif
-    int8_t fileNumber = -1;
-    for (int i = 1; i < argc; ++i) {
-        char cmd = argv[i][0];
-        if (cmd == 'p' || cmd == 'P') {
-            fileNumber = atoi((char *)&argv[i][1]);
-        }
+    printf("CPFDD v0.0.2:\nCopy files from PlusD FDD\n");
+
+    if (argc < 3) {
+        printf("Usage: cpfdd p_file_number_on_fdd file_name_on_sd\n");
     }
 
-    printf("CPFDD v0.0.2:\nCopy files from PlusD FDD\n");
+    int8_t fileNumber = -1;
+    char cmd = argv[1][0];
+    if (cmd == 'p' || cmd == 'P') {
+        fileNumber = atoi((char *)&argv[1][1]);
+    }
 
     if(fileNumber < 1 || fileNumber > 80) {
         printf("Error: invalid file number:%u\n", fileNumber);
+        return 0;
+    }
+
+    int fp = esxdos_f_open(argv[2], ESXDOS_MODE_CREAT_TRUNC | ESXDOS_MODE_CREAT_NOEXIST | ESXDOS_MODE_W);
+    if (errno) {
+        printf("Error opening file %s, error code %d\n", argv[2], errno);
         return 0;
     }
 
@@ -40,11 +49,13 @@ int main(int argc, char **argv) {
     z80_delay_ms(500);
 
     if (fdcForceInterrupt() == 0) {
-        loadFile(fileNumber);
+        copyFile(fileNumber, fp);
     }
     else {
         printf("Drive not ready!\n");
     }
+
+    esxdos_f_close(fp);
 
     z80_delay_ms(2000);
     unselectAllDrives();

@@ -5,6 +5,7 @@
 
 
 #include <arch/zx.h>
+#include <arch/zx/esxdos.h>
 #include <stdio.h>
 #include <z80.h>
 #include <string.h>
@@ -56,7 +57,15 @@ typedef union _FileDescriptor {
 
 } FileDescriptorPlusD;
 
-static void loadFileData(uint8_t *dst, uint16_t len, uint8_t track, uint8_t sector) {
+void dumpFileTapInfo(FileDataHeader *fh) {
+    printf("typetap: %u\n", fh->typeTape);
+    printf("start  : %u\n", fh->start);
+    printf("len    : %u\n", fh->len);
+    printf("ts1    : %u\n", fh->type_spec1);
+    printf("ts2    : %u\n", fh->type_spec2);
+}
+
+static void loadFileData(uint8_t *dst, uint16_t len, uint8_t track, uint8_t sector, uint8_t type, int fp) {
     uint8_t first = 1;
     while (len) {
         DBG("T=%2d S=%2d\n", track, sector);
@@ -68,13 +77,26 @@ static void loadFileData(uint8_t *dst, uint16_t len, uint8_t track, uint8_t sect
         uint8_t *src = gFdcData;
         if (first) {
             first = 0;
-            src = gFdcData + sizeof(FileDataHeader);
-            chunk -= sizeof(FileDataHeader);
-            FileDataHeader *h = (FileDataHeader *)gFdcData;
-            DBG("T==%2u len==%5u adr==%5u\n", h->typeTape, h->len, h->start);
+            if ((type >= FT_BASIC && type <=FT_CODE) || (type == FT_SCREEN)) {
+                src = gFdcData + sizeof(FileDataHeader);
+                chunk -= sizeof(FileDataHeader);
+                FileDataHeader *h = (FileDataHeader *)gFdcData;
+                DBG("T==%2u len==%5u adr==%5u\n", h->typeTape, h->len, h->start);
+                #ifdef DEBUG
+                    dumpFileTapInfo(h);
+                #endif
+            }
         }
-        memcpy(dst, src, chunk);
-        dst += chunk;
+        if (dst) {
+            memcpy(dst, src, chunk);
+            dst += chunk;
+        }
+        if (fp >= 0) {
+            if (esxdos_f_write(fp, src, chunk) != chunk) {
+                printf("Error writing esxDOS file!\n");
+                break;
+            }
+        }
         len -= chunk;
         track = gFdcData[FDD_MAX_SECT_LEN - 2];
         sector = gFdcData[FDD_MAX_SECT_LEN - 1];
@@ -94,9 +116,7 @@ static void dumpFileInfo(FileDescriptorPlusD *fd) {
     printf("sectors: %u\n", fd->sectCntHi << 8 | fd->sectCntLo);
     printf("track  : %u\n", fd->track);
     printf("sector : %u\n", fd->sector);
-    printf("start  : %u\n*\n", fd->header.start);
-    printf("ts1    : %u\n*\n", fd->header.type_spec1);
-    printf("ts2    : %u\n*\n", fd->header.type_spec2);
+    dumpFileTapInfo(&fd->header);
 }
 
 
@@ -144,7 +164,96 @@ void loadFile(int fileNumber) {
         FileDescriptorPlusD *fd = (FileDescriptorPlusD *)gFdcData;
         if (len == FDD_MAX_SECT_LEN) {
             dumpFileInfo(&fd[offset]);
-            loadFileData((uint8_t *)fd[offset].header.start, fd[offset].header.len, fd[offset].track, fd[offset].sector);
+            loadFileData((uint8_t *)fd[offset].header.start, fd[offset].header.len, fd[offset].track, fd[offset].sector, fd[offset].typePlusD, -1);
+        }
+        else {
+            printf("Error reading track %d sector %d!\n", track, sector);
+        }
+    }
+    else {
+        printf("Error: invalid file number: %u\n", fileNumber);
+    }
+}
+
+#define PLUS3DOS_HEADER_LEN 128
+#define PLUS3DOS_HEADER_CSUM (PLUS3DOS_HEADER_LEN -1)
+
+typedef union _Plus3dosHeader {
+    struct {
+        char sigStr[8];
+        uint8_t sigNum;
+        uint8_t issueNum;
+        uint8_t verNum;
+        uint16_t totalLenLo;
+        uint16_t totalLenHi;
+        uint8_t fileType;
+        uint16_t fileLen;
+        uint16_t param1;
+        uint16_t param2;
+    };
+    uint8_t u8[PLUS3DOS_HEADER_LEN];
+} Plus3dosHeader;
+
+void setPlus3dosHeaderCsum(Plus3dosHeader *h) {
+    uint8_t csum = 0;
+    for (uint8_t i = 0; i < PLUS3DOS_HEADER_CSUM; ++i) {
+        csum += h->u8[i];
+    }
+    h->u8[PLUS3DOS_HEADER_CSUM] = csum;
+}
+
+int writePlus3dosFileHeader(FileDescriptorPlusD *fd, int fp) {
+    Plus3dosHeader h;
+    memset(&h, 0, sizeof(h));
+    memcpy(h.u8, "PLUS3DOS", sizeof(h.sigStr));
+    h.sigNum = 0x1a;
+    h.issueNum = 0x01;
+    h.verNum = 0x00;
+    h.fileType = fd->header.typeTape;
+    h.fileLen = fd->header.len;
+    switch(fd->typePlusD) {
+    case FT_BASIC:
+        h.param1 = fd->header.type_spec2;
+        h.param2 = fd->header.type_spec1;
+        break;
+    case FT_NUMBER_ARRAY:
+    case FT_STRING_ARRAY:
+        h.param1 = fd->header.type_spec1;
+        break;
+    case FT_CODE:
+    case FT_SCREEN:
+        h.param1 = fd->header.start;
+        h.param2 = fd->header.type_spec2;
+        break;
+    }
+    if (fd->typePlusD == FT_BASIC) {
+    }
+    else if (fd->typePlusD == 4) {
+        h.param1 = fd->header.type_spec2;
+        h.param2 = fd->header.type_spec1;
+    }
+    h.totalLenLo = fd->header.len + PLUS3DOS_HEADER_LEN;
+    h.totalLenHi = ((uint32_t)fd->header.len + PLUS3DOS_HEADER_LEN) >> 16;
+    setPlus3dosHeaderCsum(&h);
+    return esxdos_f_write(fp, &h, PLUS3DOS_HEADER_LEN);
+}
+
+void copyFile(int fileNumber, int fp) {
+    uint8_t track, sector, offset;
+    if (fileNumber > 0 && fileNumber <= 80) {
+        printf("fn=%u ", fileNumber);
+        --fileNumber;
+        offset = fileNumber % 2;
+        fileNumber /= 2;
+        track  = fileNumber / FDD_MAX_SECTOR;
+        sector  = fileNumber % FDD_MAX_SECTOR + 1;
+        printf("T=%d S=%d offset=%d\n", track, sector, offset);
+        int len = readSector(0, track, sector);
+        FileDescriptorPlusD *fd = (FileDescriptorPlusD *)gFdcData;
+        if (len == FDD_MAX_SECT_LEN) {
+            dumpFileInfo(&fd[offset]);
+            writePlus3dosFileHeader(&fd[offset], fp);
+            loadFileData(NULL, fd[offset].header.len, fd[offset].track, fd[offset].sector, fd[offset].typePlusD, fp);
         }
         else {
             printf("Error reading track %d sector %d!\n", track, sector);
