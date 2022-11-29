@@ -128,7 +128,7 @@ static void dumpFileName(uint8_t fileNum, FileDescriptorPlusD *fd, int fileFilte
     }
     if (fd->typePlusD != FT_ERASED) {
         uint16_t len = fd->header.len;
-        printf("p%u %10s %5u B /%3u KB\n", fileNum, fd->name, len, len / 1024);
+        printf("p%u t%u %10s %5u B %3uKB\n", fileNum, fd->typePlusD, fd->name, len, len / 1024);
     }
 }
 
