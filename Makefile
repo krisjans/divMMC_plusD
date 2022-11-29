@@ -7,8 +7,9 @@ SHARED_C_FILES=plusd.c fdd_fs.c
 CAT_C_FILES=catfdd.c $(SHARED_C_FILES)
 LOAD_C_FILES=loadfdd.c $(SHARED_C_FILES)
 CP_C_FILES=cpfdd.c $(SHARED_C_FILES)
+IMG_C_FILES=imgfdd.c $(SHARED_C_FILES)
 
-all: clean catfdd_dot catfdd_tap loadfdd_dot loadfdd_tap cpfdd_dot cpfdd_tap
+all: clean catfdd_dot catfdd_tap loadfdd_dot loadfdd_tap cpfdd_dot cpfdd_tap imgfdd_dot imgfdd_tap
 
 clean:
 	rm -rf build
@@ -81,6 +82,29 @@ cpfdd_dot: build
 	mv *.lis build/
 	ls -lah build/cpfdd_CODE.bin
 	ls -lah build/CPFDD
+
+imgfdd_tap: build
+	zcc +zx -vn --list -clib=sdcc_iy -startup=30\
+		-SO3 --max-allocs-per-node200000 --opt-code-size\
+		-DVERSION=$(VERSION) -DNO_ARGC_ARGV\
+		$(IMG_C_FILES) -o build/imgfdd -create-app
+	mv *.lis build/
+	ls -lah build/imgfdd_CODE.bin
+
+imgfdd_wav: imgfdd_tap
+	tape2wav build/imgfdd.tap build/imgfdd.wav
+
+imgfdd_play: imgfdd_wav
+	play build/imgfdd.wav
+
+imgfdd_dot: build
+	zcc +zx -vn --list -clib=sdcc_iy -startup=30\
+		-SO3 --max-allocs-per-node200000 --opt-code-size\
+		-DVERSION=$(VERSION)\
+		$(IMG_C_FILES) -o build/imgfdd -subtype=dot -create-app
+	mv *.lis build/
+	ls -lah build/imgfdd_CODE.bin
+	ls -lah build/IMGFDD
 
 build:
 	mkdir -p build
