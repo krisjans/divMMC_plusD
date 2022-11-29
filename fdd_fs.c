@@ -153,16 +153,17 @@ void dumpFileList(int fileFilter) {
 void loadFile(int fileNumber) {
     uint8_t track, sector, offset;
     if (fileNumber > 0 && fileNumber <= 80) {
-        printf("fn=%u ", fileNumber);
+        printf("p%u ", fileNumber);
         --fileNumber;
         offset = fileNumber % 2;
         fileNumber /= 2;
         track  = fileNumber / FDD_MAX_SECTOR;
         sector  = fileNumber % FDD_MAX_SECTOR + 1;
-        printf("T=%d S=%d offset=%d\n", track, sector, offset);
+        printf("T=%d S=%d offset=%3d\n", track, sector, offset ? 256 : 0);
         int len = readSector(0, track, sector);
         FileDescriptorPlusD *fd = (FileDescriptorPlusD *)gFdcData;
         if (len == FDD_MAX_SECT_LEN) {
+            printf("\"%10s\" type=%d typeTap=%d\n", fd[offset].name, fd[offset].typePlusD, fd[offset].header.typeTape);
             dumpFileInfo(&fd[offset]);
             loadFileData((uint8_t *)fd[offset].header.start, fd[offset].header.len, fd[offset].track, fd[offset].sector, fd[offset].typePlusD, -1);
         }
@@ -241,16 +242,17 @@ int writePlus3dosFileHeader(FileDescriptorPlusD *fd, int fp) {
 void copyFile(int fileNumber, int fp) {
     uint8_t track, sector, offset;
     if (fileNumber > 0 && fileNumber <= 80) {
-        printf("fn=%u ", fileNumber);
+        printf("p%u ", fileNumber);
         --fileNumber;
         offset = fileNumber % 2;
         fileNumber /= 2;
         track  = fileNumber / FDD_MAX_SECTOR;
         sector  = fileNumber % FDD_MAX_SECTOR + 1;
-        printf("T=%d S=%d offset=%d\n", track, sector, offset);
+        printf("T=%d S=%d offset=%3d\n", track, sector, offset ? 256 : 0);
         int len = readSector(0, track, sector);
         FileDescriptorPlusD *fd = (FileDescriptorPlusD *)gFdcData;
         if (len == FDD_MAX_SECT_LEN) {
+            printf("\"%10s\" type=%d typeTap=%d\n", fd[offset].name, fd[offset].typePlusD, fd[offset].header.typeTape);
             dumpFileInfo(&fd[offset]);
             writePlus3dosFileHeader(&fd[offset], fp);
             loadFileData(NULL, fd[offset].header.len, fd[offset].track, fd[offset].sector, fd[offset].typePlusD, fp);
