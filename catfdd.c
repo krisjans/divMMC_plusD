@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
     int8_t fileFilter = -1;
     for (int i = 1; i < argc; ++i) {
         char cmd = argv[i][0];
-        if (cmd == 'f' || cmd == 'F') {
+        if (cmd == 't' || cmd == 'T') {
             fileFilter = atoi((char *)&argv[i][1]);
         }
     }
