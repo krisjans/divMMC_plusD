@@ -1,7 +1,7 @@
 export PATH := $(PATH):$(HOME)/retroPc/src/z80/z88dk/bin
 export ZCCCFG ?= $(HOME)/retroPc/src/z80/z88dk/lib/config
 
-VERSION="v0.0.3"
+VERSION="v0.0.4"
 
 SHARED_C_FILES=plusd.c fdd_fs.c
 CAT_C_FILES=catfdd.c $(SHARED_C_FILES)
