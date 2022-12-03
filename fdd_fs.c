@@ -13,7 +13,7 @@
 #include "plusd.h"
 #include "fdd_fs.h"
 
-#define FDD_FAT_TRACKS  3
+#define FDD_FAT_TRACKS  4
 
 enum FileTypesPlusD {
     FT_ERASED = 0,
