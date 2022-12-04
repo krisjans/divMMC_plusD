@@ -34,7 +34,7 @@ ZCC = zcc
 # $(4) extra C_FLAGS
 define compile_c
 
-$(2): $(1) $(SHARED_H_FILES)
+$(2): $(1) $(SHARED_H_FILES) Makefile
 	$(Q)$(ECHO) zcc $1 -o $2
 	$(Q)$(MKDIR) -p $(dir $(2))
 	$(Q)$(ZCC) $(ZCC_ARGS) \
@@ -47,7 +47,7 @@ endef
 
 define compile_lib
 
-$(2): $(1) $(SHARED_H_FILES)
+$(2): $(1) $(SHARED_H_FILES) Makefile
 	$(Q)$(ECHO) zcc $1 -o $2
 	$(Q)$(MKDIR) -p $(dir $(2))
 	$(Q)$(ZCC) $(ZCC_ARGS) --list -m -s --c-code-in-asm\
