@@ -10,8 +10,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <z80.h>
-#include "plusd.h"
-#include "fdd_fs.h"
+#include "libfdd_fs/plusd.h"
+#include "libfdd_fs/fdd_fs.h"
 
 #define STRINGIZE(x) #x
 #define STRINGIZE_VALUE_OF(x) STRINGIZE(x)

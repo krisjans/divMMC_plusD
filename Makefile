@@ -2,11 +2,9 @@ VERSION="v0.0.4"
 
 TARGETS  = catfdd loadfdd cpfdd imgfdd
 
-SHARED_C_FILES = plusd.c fdd_fs_dumpFileList.c fdd_fs_copyFile.c\
-				 fdd_fs_writePlus3dosFileHeader.c fdd_fs_loadFileData.c\
-				 fdd_fs_loadFile.c fdd_fs_dumpFileInfo.c
+SHARED_C_FILES = $(wildcard libfdd_fs/*.c)
 
-SHARED_H_FILES = $(wildcard *.h)
+SHARED_H_FILES = $(wildcard *.h) $(wildcard libfdd_fs/*.h)
 
 ZCC_ARGS = +zx -vn
 LDFLAGS = -clib=sdcc_iy -startup=30
@@ -38,7 +36,7 @@ define compile_c
 
 $(2): $(1) $(SHARED_H_FILES)
 	$(Q)$(ECHO) zcc $1 -o $2
-	$(Q)$(MKDIR) -p $(3)
+	$(Q)$(MKDIR) -p $(dir $(2))
 	$(Q)$(ZCC) $(ZCC_ARGS) \
 		$(LDFLAGS) \
 		$(CFALGS) $(4) $(DEV_CFLAGS)\
@@ -51,13 +49,13 @@ define compile_lib
 
 $(2): $(1) $(SHARED_H_FILES)
 	$(Q)$(ECHO) zcc $1 -o $2
-	$(Q)$(MKDIR) -p $(3)
+	$(Q)$(MKDIR) -p $(dir $(2))
 	$(Q)$(ZCC) $(ZCC_ARGS) --list -m -s --c-code-in-asm\
 		$(LDFLAGS) \
 		$(CFALGS) $(4) $(DEV_CFLAGS)\
 		-c $(1) \
 		-o $(2)
-	$(Q)$(MV) $(1).lis $(1).sym build/plusd_lib
+	$(Q)$(MV) $(1).lis $(1).sym $(dir $(2))
 
 endef
 
@@ -65,15 +63,17 @@ endef
 # $(2) subtarget
 # $(3) subtype
 # $(4) extra C_FLAGS
+# $(5) final binary file
 define build_app
 
-all: build/$(1).$(2)
+all: build/$(5)
 
-build/$(1).$(2): build/plusd.lib build/$(1)_$(2)/$(1)
-	$(Q)$(CP) build/$(1)_$(2)/$(1) build/$(1).$(2)
+build/$(5): build/plusd.lib build/$(1)_$(2)/$(5)
+	$(Q)$(CP) build/$(1)_$(2)/$(5) build/$(5)
+	$(Q)$(LS) -lah build/$(5)
 
-build/$(1)_$(2)/$(1): build/plusd.lib $(foreach cf, $(1).c, build/$(1)_$(2)/$(patsubst %.c,%.o,$(cf)))
-	$(Q)$(ECHO) "building " $(1) as $(2)
+build/$(1)_$(2)/$(5): build/plusd.lib $(foreach cf, $(1).c, build/$(1)_$(2)/$(patsubst %.c,%.o,$(cf)))
+	$(Q)$(ECHO) "building " $(1) as $(2) $(5)
 	$(Q)$(MKDIR) -p build/$(1)_$(2)
 	$(Q)$(ZCC) $(ZCC_ARGS) --list -m -s --c-code-in-asm \
 		$(LDFLAGS) \
@@ -82,39 +82,38 @@ build/$(1)_$(2)/$(1): build/plusd.lib $(foreach cf, $(1).c, build/$(1)_$(2)/$(pa
 		$(foreach cf, $(1).c, build/$(1)_$(2)/$(patsubst %.c,%.o,$(cf))) \
 		-o build/$(1)_$(2)/$(1) \
 		$(3) -create-app
-	$(Q)$(LS) -lah build/$(1)_$(2)/$(1)_CODE.bin
 
 $(foreach cf, $(1).c, $(eval $(call compile_c,$(cf),build/$(1)_$(2)/$(patsubst %.c,%.o,$(cf)),build/$(1)_$(2),$(4))))
 
 endef
 
-build/plusd_lib/plusd.lib: $(foreach cfile, $(SHARED_C_FILES), build/plusd_lib/$(patsubst %.c,%.o,$(cfile)))
+build/libfdd_fs/plusd.lib: $(foreach cfile, $(SHARED_C_FILES), build/$(patsubst %.c,%.o,$(cfile)))
 	$(Q)$(ECHO) "building " $@ as library
-	$(Q)$(MKDIR) -p build/plusd_lib
+	$(Q)$(MKDIR) -p build/libfdd_fs
 	$(Q)$(ZCC) $(ZCC_ARGS) --list -m -s --c-code-in-asm \
 		$(LDFLAGS) \
 		$(CFALGS) $(DEV_CFLAGS)\
-		$(foreach cfile, $(SHARED_C_FILES), build/plusd_lib/$(patsubst %.c,%.o,$(cfile))) \
-		-o build/plusd_lib/plusd \
+		$(foreach cfile, $(SHARED_C_FILES), build/$(patsubst %.c,%.o,$(cfile))) \
+		-o build/libfdd_fs/plusd \
 		-x -create-app
 
-$(foreach cf, $(SHARED_C_FILES), $(eval $(call compile_lib,$(cf),build/plusd_lib/$(patsubst %.c,%.o,$(cf)),build/plusd_lib,$(4))))
+$(foreach cf, $(SHARED_C_FILES), $(eval $(call compile_lib,$(cf),build/$(patsubst %.c,%.o,$(cf)),build/libfdd_fs,$(4))))
 
-build/plusd.lib: build/plusd_lib/plusd.lib
+build/plusd.lib: build/libfdd_fs/plusd.lib
 	$(Q)$(CP) $< $@
 
 define build_all
-	$(eval $(call build_app,$(1),tap,"","-DNO_ARGC_ARGV"))
-	$(eval $(call build_app,$(1),dot,"-subtype=dot",""))
+	$(eval $(call build_app,$(1),tap,"","-DNO_ARGC_ARGV",$(1).tap))
+	$(eval $(call build_app,$(1),dot,"-subtype=dot","",$(shell echo $(1) | tr '[:lower:]' '[:upper:]')))
 
-$(1)_dot: build/$(1).dot
+$(1)_dot: build/$(shell echo $(1) | tr '[:lower:]' '[:upper:]')
 
 $(1)_tap: build/$(1).tap
 
 $(1)_wav: build/$(1)_tap/$(1).wav
 
-build/$(1)_tap/$(1).wav: build/$(1)_tap/$(1)
-	tape2wav build/$(1)_tap/$(1).tap build/$(1)_tap/$(1).wav
+build/$(1)_tap/$(1).wav: build/$(1).tap
+	tape2wav build/$(1).tap build/$(1)_tap/$(1).wav
 
 $(1)_play: build/$(1)_tap/$(1).wav
 	play build/$(1)_tap/$(1).wav
