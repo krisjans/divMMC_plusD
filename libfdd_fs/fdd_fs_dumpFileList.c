@@ -20,8 +20,25 @@ static void dumpFileName(uint8_t fileNum, FileDescriptorPlusD *fd, int fileFilte
         }
     }
     if (fd->typePlusD != FT_ERASED) {
-        uint16_t len = fd->header.len;
-        printf("p%u t%u %10s %5u B %3uKB\n", fileNum, fd->typePlusD, fd->name, len, len / 1024);
+        uint32_t len = 0;
+        switch(fd->typePlusD) {
+        case FT_BASIC:
+        case FT_NUMBER_ARRAY:
+        case FT_STRING_ARRAY:
+        case FT_CODE:
+        case FT_SCREEN:
+            len = fd->header.len;
+            break;
+        case FT_SNAPSHOT_48K:
+            len = 1024UL * 48UL + FILE_HEADER_PLUSD_LEN;
+            break;
+        case FT_SNAPSHOT_128K:
+            len = 1024UL * 128UL + FILE_HEADER_PLUSD_LEN;
+            break;
+        };
+        printf("p%u t%u %.10s", fileNum, fd->typePlusD, fd->name);
+        printf(" %6luB", len);
+        printf(" %3luKB\n", len / 1024UL);
     }
 }
 
