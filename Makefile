@@ -123,9 +123,6 @@ $(foreach target, $(TARGETS), \
 	$(eval $(call build_all,$(target)))\
 )
 
-build:
-	$(Q)$(MKDIR) -p build
-
 clean:
 	$(RM) -rf build
 
