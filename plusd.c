@@ -14,11 +14,19 @@
 #include "plusd.h"
 
 
+#ifdef UNMODIFIED_PLUSD
+IO_PORT(IO_FDC_CMD_STS, 0xE3); // 227
+IO_PORT(IO_FDC_TRACK,   0xEB); // 235
+IO_PORT(IO_PLUSD_CTRL,  0xEF); // 239
+IO_PORT(IO_FDC_SECT,    0xF3); // 243
+IO_PORT(IO_FDC_DATA,    0xFB); // 251
+#else
 IO_PORT(IO_FDC_CMD_STS, 0xA7); // originally at 0xE3 227
 IO_PORT(IO_FDC_TRACK,   0xAF);  // originally at 0xEB 235
 IO_PORT(IO_PLUSD_CTRL,  0xEF);  // originally at 0xEF 239
 IO_PORT(IO_FDC_SECT,    0xB7);    // originally at 0xF3 243
 IO_PORT(IO_FDC_DATA,    0xBF);    // originally at 0xFB 251
+#endif
 
 #define PLUSD_DRIVE_A   (1 << 0)
 #define PLUSD_DRIVE_B   (1 << 1)
