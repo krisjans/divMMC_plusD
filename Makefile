@@ -6,6 +6,8 @@ SHARED_C_FILES = plusd.c fdd_fs_dumpFileList.c fdd_fs_copyFile.c\
 				 fdd_fs_writePlus3dosFileHeader.c fdd_fs_loadFileData.c\
 				 fdd_fs_loadFile.c fdd_fs_dumpFileInfo.c
 
+SHARED_H_FILES = $(wildcard *.h)
+
 ZCC_ARGS = +zx -vn
 LDFLAGS = -clib=sdcc_iy -startup=30
 CFALGS = -DVERSION=$(VERSION) -SO3 --max-allocs-per-node200000 --opt-code-size
@@ -34,7 +36,7 @@ ZCC = zcc
 # $(4) extra C_FLAGS
 define compile_c
 
-$(2): $(1)
+$(2): $(1) $(SHARED_H_FILES)
 	$(Q)$(ECHO) zcc $1 -o $2
 	$(Q)$(MKDIR) -p $(3)
 	$(Q)$(ZCC) $(ZCC_ARGS) \
@@ -47,7 +49,7 @@ endef
 
 define compile_lib
 
-$(2): $(1)
+$(2): $(1) $(SHARED_H_FILES)
 	$(Q)$(ECHO) zcc $1 -o $2
 	$(Q)$(MKDIR) -p $(3)
 	$(Q)$(ZCC) $(ZCC_ARGS) --list -m -s --c-code-in-asm\
