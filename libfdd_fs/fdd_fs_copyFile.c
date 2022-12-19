@@ -29,7 +29,18 @@ void copyFile(int fileNumber, int fp) {
             uint32_t fileLen  = fd[offset].header.len;
             printf("\"%10s\" type=%d typeTap=%d\n", fd[offset].name, fd[offset].typePlusD, fd[offset].header.typeTape);
             dumpFileInfo(&fd[offset]);
-            writePlus3dosFileHeader(&fd[offset], fp);
+            if (fd[offset].typePlusD == FT_SNAPSHOT_48K || fd[offset].typePlusD == FT_SNAPSHOT_128K) {
+                esxdos_f_write(fp, fd[offset].u8, FILE_DESCR_PLUSD_LEN);
+                if (fd[offset].typePlusD == FT_SNAPSHOT_128K) {
+                    fileLen  = 1024UL * 128 + 1;
+                }
+                else {
+                    fileLen = 1024UL * 48;
+                }
+            }
+            else {
+                writePlus3dosFileHeader(&fd[offset], fp);
+            }
             loadFileData(NULL, fileLen, fd[offset].track, fd[offset].sector, fd[offset].typePlusD, fp);
         }
         else {
