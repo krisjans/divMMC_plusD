@@ -17,7 +17,7 @@ void loadFileData(uint8_t *dst, uint16_t len, uint8_t track, uint8_t sector, uin
     uint8_t first = 1;
     while (len) {
         DBG("T=%2d S=%2d\n", track, sector);
-        if (readSector(0, track, sector) != FDD_MAX_SECT_LEN) {
+        if (readSector(track, sector) != FDD_MAX_SECT_LEN) {
             printf("\n\nRead error track==%d sector %d\n\n", track, sector);
             break;
         }

@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
                     rc = 0;
                     for (uint8_t sector = FDD_MIN_SECTOR; sector <= FDD_MAX_SECTOR; ++sector) {
                         for (uint8_t retry = 0; retry < 3; ++retry) {
-                            rc = readSector(head, track, sector);
+                            rc = readSector(track + (head * 0x80), sector);
                             if (rc == FDD_MAX_SECT_LEN) {
                                 if (esxdos_f_write(fp, gFdcData, FDD_MAX_SECT_LEN) == FDD_MAX_SECT_LEN) {
                                     break;

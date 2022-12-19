@@ -84,7 +84,12 @@ static inline void sendFdcCmd(const unsigned char cmd) {
     IO_FDC_CMD_STS = cmd;
 }
 
-static unsigned char seek(unsigned char head, unsigned char track, unsigned char sector) {
+static unsigned char seek(unsigned char track, unsigned char sector) {
+    unsigned char head  = 0;
+    if (track >= 0x80) {
+        head = 1;
+        track -= 0x80;
+    }
     selectDriveA(head);
     z80_delay_ms(20);
     waitFdcReady();
@@ -122,10 +127,10 @@ typedef union _FdcStatus {
 
 unsigned char gFdcData[FDD_MAX_SECT_LEN];
 
-unsigned short readSector(unsigned char head, unsigned char track, unsigned char sector) {
+unsigned short readSector(unsigned char track, unsigned char sector) {
     unsigned short l = 0;
     unsigned char oldStatus = 0;
-    seek(head, track, sector);
+    seek(track, sector);
     waitFdcReady();
 
     IO_FDC_CMD_STS = FDC_CMD_READ_SECTOR;

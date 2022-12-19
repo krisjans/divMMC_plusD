@@ -23,7 +23,7 @@ void loadFile(int fileNumber) {
         track  = fileNumber / FDD_MAX_SECTOR;
         sector  = fileNumber % FDD_MAX_SECTOR + 1;
         printf("T=%d S=%d offset=%3d\n", track, sector, offset ? 256 : 0);
-        int len = readSector(0, track, sector);
+        int len = readSector(track, sector);
         FileDescriptorPlusD *fd = (FileDescriptorPlusD *)gFdcData;
         if (len == FDD_MAX_SECT_LEN) {
             printf("\"%10s\" type=%d typeTap=%d\n", fd[offset].name, fd[offset].typePlusD, fd[offset].header.typeTape);

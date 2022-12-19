@@ -46,7 +46,7 @@ void dumpFileList(int fileFilter) {
     for (int track = 0; track < FDD_FAT_TRACKS; ++track){
         for (int sector = 1; sector <= FDD_MAX_SECTOR; ++sector) {
             uint8_t fileNum = (track * FDD_MAX_SECTOR + sector - 1) * 2 + 1;
-            int len = readSector(0, track, sector);
+            int len = readSector(track, sector);
             if (len == FILE_DESCR_PLUSD_LEN || len == FDD_MAX_SECT_LEN) {
                 dumpFileName(fileNum, (FileDescriptorPlusD *)gFdcData, fileFilter);
                 if (len == FDD_MAX_SECT_LEN) {

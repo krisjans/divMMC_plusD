@@ -12,6 +12,6 @@ extern unsigned char gFdcData[FDD_MAX_SECT_LEN];
 void selectDriveA(unsigned char head);
 inline void unselectAllDrives(void);
 unsigned char fdcForceInterrupt(void);
-unsigned short readSector(unsigned char head, unsigned char track, unsigned char sector);
+unsigned short readSector(unsigned char track, unsigned char sector);
 
 #endif // __PLUSD_H__
