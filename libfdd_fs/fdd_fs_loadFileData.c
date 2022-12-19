@@ -13,7 +13,7 @@
 #include "plusd.h"
 #include "fdd_fs.h"
 
-void loadFileData(uint8_t *dst, uint16_t len, uint8_t track, uint8_t sector, uint8_t type, int fp) {
+void loadFileData(uint8_t *dst, uint32_t len, uint8_t track, uint8_t sector, uint8_t type, int fp) {
     uint8_t first = 1;
     while (len) {
         DBG("T=%2d S=%2d\n", track, sector);

@@ -26,10 +26,11 @@ void copyFile(int fileNumber, int fp) {
         int len = readSector(track, sector);
         FileDescriptorPlusD *fd = (FileDescriptorPlusD *)gFdcData;
         if (len == FDD_MAX_SECT_LEN) {
+            uint32_t fileLen  = fd[offset].header.len;
             printf("\"%10s\" type=%d typeTap=%d\n", fd[offset].name, fd[offset].typePlusD, fd[offset].header.typeTape);
             dumpFileInfo(&fd[offset]);
             writePlus3dosFileHeader(&fd[offset], fp);
-            loadFileData(NULL, fd[offset].header.len, fd[offset].track, fd[offset].sector, fd[offset].typePlusD, fp);
+            loadFileData(NULL, fileLen, fd[offset].track, fd[offset].sector, fd[offset].typePlusD, fp);
         }
         else {
             printf("Error reading track %d sector %d!\n", track, sector);

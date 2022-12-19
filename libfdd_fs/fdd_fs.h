@@ -50,6 +50,6 @@ void loadFile(int fileNumber);
 void copyFile(int fileNumber, int fp);
 void dumpFileInfo(FileDescriptorPlusD *fd);
 int writePlus3dosFileHeader(FileDescriptorPlusD *fd, int fp);
-void loadFileData(uint8_t *dst, uint16_t len, uint8_t track, uint8_t sector, uint8_t type, int fp);
+void loadFileData(uint8_t *dst, uint32_t len, uint8_t track, uint8_t sector, uint8_t type, int fp);
 
 #endif
